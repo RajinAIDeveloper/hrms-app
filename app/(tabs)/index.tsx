@@ -67,11 +67,15 @@ export default function Dashboard() {
   }));
 
   const QUICK_ACTIONS = [
-    { id: 'attendance', label: 'Attendance', icon: 'calendar-outline', route: '/(tabs)/attendance', color: '#3B82F6' },
-    { id: 'leave', label: 'Leave', icon: 'airplane-outline', route: '/(tabs)/leave-request', color: '#F59E0B' },
-    { id: 'directory', label: 'Directory', icon: 'people-outline', route: '/directory', color: '#10B981' },
-    { id: 'payslip', label: 'Payslip', icon: 'document-text-outline', route: '/(tabs)/payroll', color: '#8B5CF6' },
+    { id: 'lunch', label: 'Apply Lunch', icon: 'fast-food-outline', route: '/(tabs)/lunch-request', color: '#EF4444' },
+    { id: 'leave', label: 'Apply Leave', icon: 'airplane-outline', route: '/(tabs)/leave-request', color: '#F59E0B' },
+    { id: 'expense', label: 'Expense Reimbursement', icon: 'receipt-outline', route: '/(tabs)/expense-request', color: '#10B981' },
+    { id: 'documents', label: 'HR Documents', icon: 'document-text-outline', route: '/(tabs)/payslip-download', color: '#8B5CF6' },
   ];
+
+  const handleActionPress = (action: any) => {
+    router.push(action.route);
+  };
 
   return (
     <SafeAreaView style={dynamicStyles.container} edges={['top']}>
@@ -126,6 +130,34 @@ export default function Dashboard() {
           </Text>
         </View>
 
+        {/* NEW: Overview Section */}
+        <View style={dynamicStyles.section}>
+          <Text style={dynamicStyles.sectionTitle}>Overview</Text>
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            {/* Attendance % Card */}
+            <View style={[dynamicStyles.overviewCard, { flex: 1, backgroundColor: isDark ? '#1F2937' : '#EFF6FF' }]}>
+              <View style={[dynamicStyles.overviewIcon, { backgroundColor: '#3B82F6' }]}>
+                <Ionicons name="stats-chart" size={18} color="white" />
+              </View>
+              <View>
+                <Text style={dynamicStyles.overviewValue}>92%</Text>
+                <Text style={dynamicStyles.overviewLabel}>Attendance</Text>
+              </View>
+            </View>
+
+            {/* Leave Balance Card */}
+            <View style={[dynamicStyles.overviewCard, { flex: 1, backgroundColor: isDark ? '#1F2937' : '#FEF3C7' }]}>
+              <View style={[dynamicStyles.overviewIcon, { backgroundColor: '#F59E0B' }]}>
+                <Ionicons name="briefcase" size={18} color="white" />
+              </View>
+              <View>
+                <Text style={dynamicStyles.overviewValue}>9 Days</Text>
+                <Text style={dynamicStyles.overviewLabel}>Leave Bal.</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
         {/* Quick Actions */}
         <View style={dynamicStyles.section}>
           <Text style={dynamicStyles.sectionTitle}>Quick Actions</Text>
@@ -134,12 +166,12 @@ export default function Dashboard() {
               <TouchableOpacity
                 key={action.id}
                 style={dynamicStyles.gridItem}
-                onPress={() => router.push(action.route as any)}
+                onPress={() => handleActionPress(action)}
               >
                 <View style={[dynamicStyles.gridIcon, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : '#EFF6FF' }]}>
                   <Ionicons name={action.icon as any} size={24} color={action.color} />
                 </View>
-                <Text style={dynamicStyles.gridLabel}>{action.label}</Text>
+                <Text style={dynamicStyles.gridLabelCenter}>{action.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -385,5 +417,37 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: isDark ? '#F9FAFB' : '#171717',
+  },
+  // Overview
+  overviewCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 16,
+    gap: 12,
+  },
+  overviewIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  overviewValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: isDark ? '#F9FAFB' : '#1F2937',
+  },
+  overviewLabel: {
+    fontSize: 12,
+    color: isDark ? '#9CA3AF' : '#6B7280',
+    fontWeight: '500',
+  },
+  gridLabelCenter: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: isDark ? '#F9FAFB' : '#171717',
+    textAlign: 'center',
+    marginTop: 4,
   },
 });

@@ -52,7 +52,13 @@ const FABMenu = ({ isDark, onNavigate }: { isDark: boolean; onNavigate: (r: stri
                     style={[styles.menuItem, { backgroundColor: color }]}
                     onPress={() => {
                         toggleMenu();
-                        setTimeout(() => onNavigate(route), 200);
+                        if (route === 'shift-details') {
+                            setTimeout(() => alert('Work Shift Details coming soon!'), 200);
+                        } else if (route === 'policies') {
+                            setTimeout(() => alert('Company Policies coming soon!'), 200);
+                        } else {
+                            setTimeout(() => onNavigate(route), 200);
+                        }
                     }}
                 >
                     <Ionicons name={icon} size={22} color="white" />
@@ -67,9 +73,10 @@ const FABMenu = ({ isDark, onNavigate }: { isDark: boolean; onNavigate: (r: stri
     return (
         <View style={styles.fabWrapper}>
             {/* Menu Items */}
-            <MenuItem index={0} total={3} icon="people" color="#10B981" label="Directory" route="/directory" />
-            <MenuItem index={1} total={3} icon="restaurant" color="#F59E0B" label="Lunch" route="/(tabs)/lunch-request" />
-            <MenuItem index={2} total={3} icon="airplane" color="#8B5CF6" label="Leave" route="/(tabs)/leave-request" />
+            {/* Menu Items */}
+            <MenuItem index={0} total={3} icon="time" color="#F59E0B" label="WorkShift" route="shift-details" />
+            <MenuItem index={1} total={3} icon="people" color="#10B981" label="Directory" route="/directory" />
+            <MenuItem index={2} total={3} icon="shield-checkmark" color="#8B5CF6" label="Policies" route="policies" />
 
             {/* Main FAB */}
             <TouchableOpacity onPress={toggleMenu} activeOpacity={0.8} style={styles.fabButtonContainer}>
