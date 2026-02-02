@@ -1,13 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
-import { useColorScheme } from '../hooks/use-color-scheme';
 import AppHeader from '../components/AppHeader';
-
-const { width } = Dimensions.get('window');
+import { useTheme } from '../context/ThemeContext';
 
 // Shift Card Component
 const ShiftCard = ({ day, date, type, time, isToday, theme }: any) => (
@@ -43,8 +41,8 @@ const TeamMember = ({ name, role, image, theme, index }: any) => (
 );
 
 export default function ShiftDetailsScreen() {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const { isDark } = useTheme();
+    const theme = Colors[isDark ? 'dark' : 'light'];
 
     const weekSchedule = [
         { day: 'Mon', date: '02 Feb', type: 'General', time: '09:00 - 18:00', isToday: true },
@@ -67,13 +65,15 @@ export default function ShiftDetailsScreen() {
         <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
             <AppHeader showBack={true} showLogo={true} />
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-
-                {/* Title */}
-                <Animated.View entering={FadeInDown.duration(300)} style={styles.headerSection}>
+            {/* Fixed Header (Directory-style) */}
+            <View style={[styles.fixedHeader, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
+                <Animated.View entering={FadeInDown.duration(300)}>
                     <Text style={[styles.pageTitle, { color: theme.text }]}>⏱️ My Work Shift</Text>
                     <Text style={[styles.pageSubtitle, { color: theme.subtext }]}>Manage your schedule & team availability</Text>
                 </Animated.View>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
                 {/* Current Shift Banner */}
                 <Animated.View entering={FadeInDown.delay(100).duration(400)} style={[styles.currentShiftCard, { backgroundColor: theme.primary }]}>
@@ -124,13 +124,18 @@ export default function ShiftDetailsScreen() {
 
 const styles = StyleSheet.create({
     container: { flex: 1 },
-    scrollContent: { paddingBottom: 100 },
-    headerSection: { paddingHorizontal: 20, paddingTop: 10 },
+    fixedHeader: {
+        paddingHorizontal: 20,
+        paddingTop: 16,
+        paddingBottom: 12,
+        borderBottomWidth: 1,
+    },
+    scrollContent: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 100 },
     pageTitle: { fontSize: 24, fontWeight: '700' },
     pageSubtitle: { fontSize: 14, marginTop: 4 },
 
     // Current Shift
-    currentShiftCard: { margin: 20, padding: 20, borderRadius: 20 },
+    currentShiftCard: { padding: 20, borderRadius: 20, marginBottom: 16 },
     currentShiftHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
     statusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#4ADE80', marginRight: 8 },
     currentShiftLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: '700', letterSpacing: 1 },
@@ -141,10 +146,10 @@ const styles = StyleSheet.create({
     progressText: { color: 'rgba(255,255,255,0.8)', fontSize: 12, textAlign: 'right' },
 
     // Roster
-    sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 12 },
+    sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
     sectionTitle: { fontSize: 18, fontWeight: '700' },
     seeAll: { fontSize: 14, fontWeight: '600' },
-    rosterScroll: { paddingHorizontal: 20, gap: 12 },
+    rosterScroll: { paddingRight: 20, gap: 12 },
     shiftCard: { width: 100, padding: 12, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
     shiftDay: { fontSize: 12, fontWeight: '600', marginBottom: 4 },
     shiftDate: { fontSize: 14, fontWeight: '700', marginBottom: 8 },
@@ -153,7 +158,7 @@ const styles = StyleSheet.create({
     shiftTime: { fontSize: 10 },
 
     // Team
-    teamList: { paddingHorizontal: 20, gap: 12 },
+    teamList: { gap: 12 },
     teamMember: { flexDirection: 'row', alignItems: 'center', padding: 12, borderRadius: 16, borderWidth: 1 },
     teamAvatar: { width: 48, height: 48, borderRadius: 24 },
     teamInfo: { flex: 1, marginLeft: 12 },

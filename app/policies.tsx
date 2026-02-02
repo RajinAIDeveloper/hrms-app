@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { useColorScheme } from '../hooks/use-color-scheme';
 import AppHeader from '../components/AppHeader';
+import { useTheme } from '../context/ThemeContext';
 
 const POLICY_DOCS = [
     { id: 1, title: 'Employee Handbook 2026', category: 'HR', size: '2.4 MB', date: 'Jan 10, 2026', icon: 'book' },
@@ -19,8 +19,8 @@ const POLICY_DOCS = [
 const CATEGORIES = ['All', 'HR', 'IT', 'Finance', 'Legal', 'Ops'];
 
 export default function PoliciesScreen() {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const { isDark } = useTheme();
+    const theme = Colors[isDark ? 'dark' : 'light'];
 
     const [search, setSearch] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
@@ -39,10 +39,8 @@ export default function PoliciesScreen() {
         <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
             <AppHeader showBack={true} showLogo={true} />
 
-            <AppHeader showBack={true} showLogo={true} />
-
             {/* Fixed Header Section */}
-            <View>
+            <View style={[styles.fixedHeader, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
                 <View style={styles.titleRow}>
                     <Text style={[styles.title, { color: theme.text }]}>📜 Policies</Text>
                     <View style={[styles.countBadge, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -129,17 +127,22 @@ export default function PoliciesScreen() {
                     </View>
                 )}
             </ScrollView>
-        </View>
-        </SafeAreaView >
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
     container: { flex: 1 },
-    content: { flex: 1, paddingHorizontal: 20 },
-    headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 16 },
+    fixedHeader: {
+        paddingHorizontal: 20,
+        paddingTop: 16,
+        paddingBottom: 12,
+        borderBottomWidth: 1,
+    },
+    titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
     title: { fontSize: 24, fontWeight: '700' },
     count: { fontSize: 13 },
+    countBadge: { minWidth: 34, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
 
     // Search
     searchContainer: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, height: 50, borderRadius: 12, borderWidth: 1, marginBottom: 16 },
@@ -152,7 +155,7 @@ const styles = StyleSheet.create({
     categoryText: { fontSize: 13, fontWeight: '600' },
 
     // List
-    listContent: { paddingBottom: 100 },
+    listContent: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 100 },
     docCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 16, borderWidth: 1, marginBottom: 12 },
     iconBox: { width: 48, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 16 },
     docInfo: { flex: 1 },
