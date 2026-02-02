@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Image, StyleSheet, Alert } from 'react-na
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../context/ThemeContext';
+import { useDrawer } from '../context/DrawerContext';
 
 interface AppHeaderProps {
     showMenu?: boolean;
@@ -23,6 +24,7 @@ export default function AppHeader({
 }: AppHeaderProps) {
     const router = useRouter();
     const { isDark } = useTheme();
+    const { openDrawer } = useDrawer();
 
     const bgColor = isDark ? '#1F2937' : 'white';
     const iconColor = isDark ? '#60A5FA' : '#2563EB';
@@ -44,7 +46,7 @@ export default function AppHeader({
                         <Ionicons name="arrow-back" size={22} color={iconColor} />
                     </TouchableOpacity>
                 ) : showMenu && (
-                    <TouchableOpacity onPress={() => console.log('Drawer')} style={[styles.iconButton, { backgroundColor: isDark ? '#374151' : '#F5F5F5' }]}>
+                    <TouchableOpacity onPress={openDrawer} style={[styles.iconButton, { backgroundColor: isDark ? '#374151' : '#F5F5F5' }]}>
                         <Ionicons name="grid-outline" size={22} color={iconColor} />
                     </TouchableOpacity>
                 )}
