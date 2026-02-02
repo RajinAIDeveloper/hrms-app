@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../../context/ThemeContext';
+import { usePrayerSettings } from '../../context/PrayerSettingsContext';
 import AppHeader from '../../components/AppHeader';
 import Animated, { FadeIn, FadeInDown, FadeInUp, FadeInLeft, FadeInRight, ZoomIn } from 'react-native-reanimated';
 
@@ -30,6 +31,12 @@ const MENU_ITEMS = [
 export default function ProfileScreen() {
     const router = useRouter();
     const { theme, isDark, setTheme } = useTheme();
+    const {
+        showUpcomingPrayerTimes,
+        enablePrayerTimeNotifications,
+        setShowUpcomingPrayerTimes,
+        setEnablePrayerTimeNotifications,
+    } = usePrayerSettings();
 
     // State
     const [avatar, setAvatar] = useState('https://cdn.usegalileo.ai/sdxl10/68175782-9905-4dcf-8848-f2b7a97fd22f.png');
@@ -168,6 +175,33 @@ export default function ProfileScreen() {
                         <View style={styles.menuIconWrapper}><Ionicons name="moon-outline" size={20} color={subTextColor} /></View>
                         <Text style={styles.menuLabel}>Dark Mode</Text>
                         <Switch value={isDark} onValueChange={toggleTheme} trackColor={{ false: '#E5E5E5', true: '#93C5FD' }} thumbColor={isDark ? '#2563EB' : '#A3A3A3'} />
+                    </View>
+
+                    <View style={styles.menuItem}>
+                        <View style={styles.menuIconWrapper}><Ionicons name="time-outline" size={20} color={subTextColor} /></View>
+                        <Text style={styles.menuLabel}>Show Upcoming Prayer time</Text>
+                        <Switch
+                            value={showUpcomingPrayerTimes}
+                            onValueChange={setShowUpcomingPrayerTimes}
+                            trackColor={{ false: '#E5E5E5', true: '#93C5FD' }}
+                            thumbColor={showUpcomingPrayerTimes ? '#2563EB' : '#A3A3A3'}
+                        />
+                    </View>
+
+                    <View style={styles.menuItem}>
+                        <View style={styles.menuIconWrapper}><Ionicons name="notifications-outline" size={20} color={subTextColor} /></View>
+                        <Text style={[styles.menuLabel, !showUpcomingPrayerTimes && { color: isDark ? '#6B7280' : '#A3A3A3' }]}>Enable Prayer time Notification</Text>
+                        <Switch
+                            value={enablePrayerTimeNotifications}
+                            onValueChange={setEnablePrayerTimeNotifications}
+                            disabled={!showUpcomingPrayerTimes}
+                            trackColor={{ false: '#E5E5E5', true: '#93C5FD' }}
+                            thumbColor={
+                                !showUpcomingPrayerTimes
+                                    ? (isDark ? '#6B7280' : '#D4D4D4')
+                                    : (enablePrayerTimeNotifications ? '#2563EB' : '#A3A3A3')
+                            }
+                        />
                     </View>
                 </Animated.View>
 

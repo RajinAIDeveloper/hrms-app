@@ -13,9 +13,36 @@ import Animated, {
   Easing
 } from 'react-native-reanimated';
 import { useTheme } from '../../context/ThemeContext';
+import { usePrayerSettings } from '../../context/PrayerSettingsContext';
 import AppHeader from '../../components/AppHeader';
 
 const { width } = Dimensions.get('window');
+
+const PRAYER_TIMES = [
+  { id: 'fajr', label: 'Fajr', time: '05:10 AM' },
+  { id: 'dhuhr', label: 'Dhuhr', time: '12:30 PM' },
+  { id: 'asr', label: 'Asr', time: '03:45 PM' },
+  { id: 'maghrib', label: 'Maghrib', time: '06:05 PM' },
+  { id: 'isha', label: 'Isha', time: '07:25 PM' },
+];
+
+const parseTimeToMinutes = (value: string) => {
+  const match = value.trim().match(/^(\d{1,2}):(\d{2})\s*([AaPp][Mm])$/);
+  if (!match) return 0;
+  const hoursRaw = Number(match[1]);
+  const minutes = Number(match[2]);
+  const ampm = match[3].toUpperCase();
+  const hours12 = hoursRaw % 12;
+  const hours24 = ampm === 'PM' ? hours12 + 12 : hours12;
+  return hours24 * 60 + minutes;
+};
+
+const getNextPrayerIndex = (now: Date) => {
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const minutesList = PRAYER_TIMES.map((p) => parseTimeToMinutes(p.time));
+  const nextIndex = minutesList.findIndex((m) => m > nowMinutes);
+  return nextIndex === -1 ? 0 : nextIndex;
+};
 
 
 
@@ -23,12 +50,14 @@ const { width } = Dimensions.get('window');
 export default function Dashboard() {
   const router = useRouter();
   const { isDark } = useTheme();
+  const { showUpcomingPrayerTimes } = usePrayerSettings();
   const dynamicStyles = getStyles(isDark);
 
   // Biometric/Timer State
   const [isPunchedIn, setIsPunchedIn] = useState(false);
   const [timer, setTimer] = useState(0); // in seconds
   const intervalRef = useRef<any>(null);
+  const [nowTick, setNowTick] = useState(() => Date.now());
 
   // Animation Values
   const fingerprintScale = useSharedValue(1);
@@ -44,6 +73,12 @@ export default function Dashboard() {
     }
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [isPunchedIn]);
+
+  useEffect(() => {
+    if (!showUpcomingPrayerTimes) return;
+    const id = setInterval(() => setNowTick(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, [showUpcomingPrayerTimes]);
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -76,6 +111,8 @@ export default function Dashboard() {
   const handleActionPress = (action: any) => {
     router.push(action.route);
   };
+
+  const nextPrayerIndex = getNextPrayerIndex(new Date(nowTick));
 
   return (
     <SafeAreaView style={dynamicStyles.container} edges={['top']}>
@@ -157,6 +194,23 @@ export default function Dashboard() {
             </View>
           </View>
         </View>
+
+        {showUpcomingPrayerTimes && (
+          <View style={dynamicStyles.section}>
+            <Text style={dynamicStyles.sectionTitle}>Upcoming Prayer Times</Text>
+            <View style={dynamicStyles.prayerCard}>
+              {PRAYER_TIMES.map((p, index) => {
+                const isNext = index === nextPrayerIndex;
+                return (
+                  <View key={p.id} style={[dynamicStyles.prayerRow, isNext && dynamicStyles.prayerRowActive]}>
+                    <Text style={[dynamicStyles.prayerName, isNext && dynamicStyles.prayerNameActive]}>{p.label}</Text>
+                    <Text style={[dynamicStyles.prayerTime, isNext && dynamicStyles.prayerTimeActive]}>{p.time}</Text>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
 
         {/* Quick Actions */}
         <View style={dynamicStyles.section}>
@@ -355,6 +409,48 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
     fontWeight: 'bold',
     color: isDark ? '#F9FAFB' : '#171717',
     marginBottom: 16,
+  },
+  prayerCard: {
+    backgroundColor: isDark ? '#1F2937' : 'white',
+    borderRadius: 16,
+    padding: 12,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: isDark ? '#374151' : '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  prayerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  prayerRowActive: {
+    backgroundColor: isDark ? 'rgba(96, 165, 250, 0.15)' : '#DBEAFE',
+    borderWidth: 1,
+    borderColor: isDark ? '#60A5FA' : '#2563EB',
+  },
+  prayerName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: isDark ? '#F9FAFB' : '#171717',
+  },
+  prayerNameActive: {
+    color: isDark ? '#93C5FD' : '#1D4ED8',
+  },
+  prayerTime: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: isDark ? '#F9FAFB' : '#111827',
+  },
+  prayerTimeActive: {
+    color: isDark ? '#93C5FD' : '#1D4ED8',
   },
   grid: {
     flexDirection: 'row',
