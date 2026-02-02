@@ -12,10 +12,10 @@ import Animated, {
     withSequence,
     withTiming,
 } from 'react-native-reanimated';
-import { useColorScheme } from '../../hooks/use-color-scheme';
 import { router } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AppHeader from '../../components/AppHeader';
+import { useTheme } from '../../context/ThemeContext';
 
 // --- Components ---
 
@@ -84,8 +84,8 @@ const SubmitButton = ({ onPress, loading, theme }: any) => {
 
 // --- Main Screen ---
 export default function LunchRequestScreen() {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const { isDark } = useTheme();
+    const theme = Colors[isDark ? 'dark' : 'light'];
 
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -127,7 +127,7 @@ export default function LunchRequestScreen() {
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
                 {/* Page Title */}
-                <Animated.View entering={FadeInDown.duration(300)} style={{ paddingHorizontal: 20, marginTop: 10, marginBottom: 10 }}>
+                <Animated.View entering={FadeInDown.duration(300)} style={{ paddingHorizontal: 20, marginTop: 10, marginBottom: 10, backgroundColor: theme.card, borderBottomWidth: 1, borderBottomColor: theme.border }}>
                     <Text style={[styles.headerTitle, { color: theme.text }]}>🍽️ Apply Lunch</Text>
                 </Animated.View>
 

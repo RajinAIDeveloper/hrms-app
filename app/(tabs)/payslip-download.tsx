@@ -4,8 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { useColorScheme } from '../../hooks/use-color-scheme';
 import { router } from 'expo-router';
+import { useTheme } from '../../context/ThemeContext';
 
 // Download Option Card
 const DownloadOption = ({ icon, title, subtitle, color, onPress, theme, delay }: any) => (
@@ -28,8 +28,8 @@ const DownloadOption = ({ icon, title, subtitle, color, onPress, theme, delay }:
 );
 
 export default function PayslipDownloadScreen() {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const { isDark } = useTheme();
+    const theme = Colors[isDark ? 'dark' : 'light'];
 
     const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 

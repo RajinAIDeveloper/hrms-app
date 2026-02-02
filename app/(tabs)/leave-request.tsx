@@ -11,10 +11,10 @@ import Animated, {
     withSequence,
     withTiming,
 } from 'react-native-reanimated';
-import { useColorScheme } from '../../hooks/use-color-scheme';
 import { router } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AppHeader from '../../components/AppHeader';
+import { useTheme } from '../../context/ThemeContext';
 
 // Leave Type Selector
 const LeaveTypeSelector = ({ selected, onSelect, theme }: any) => {
@@ -73,8 +73,8 @@ const FormSection = ({ title, children, delay = 0, theme }: any) => (
 
 // --- Main Screen ---
 export default function LeaveRequestScreen() {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const { isDark } = useTheme();
+    const theme = Colors[isDark ? 'dark' : 'light'];
 
     const [leaveType, setLeaveType] = useState('casual');
     const [startDate, setStartDate] = useState(new Date());
@@ -139,7 +139,7 @@ export default function LeaveRequestScreen() {
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
                 {/* Page Title */}
-                <Animated.View entering={FadeInDown.duration(300)} style={{ paddingHorizontal: 20, marginTop: 10, marginBottom: 10 }}>
+                <Animated.View entering={FadeInDown.duration(300)} style={{ paddingHorizontal: 20, marginTop: 10, marginBottom: 10, backgroundColor: theme.card, borderBottomWidth: 1, borderBottomColor: theme.border }}>
                     <Text style={[styles.headerTitle, { color: theme.text }]}>📅 Apply Leave</Text>
                 </Animated.View>
 

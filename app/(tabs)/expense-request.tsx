@@ -11,11 +11,11 @@ import Animated, {
     withSequence,
     withTiming,
 } from 'react-native-reanimated';
-import { useColorScheme } from '../../hooks/use-color-scheme';
 import { router } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AppHeader from '../../components/AppHeader';
 import * as ImagePicker from 'expo-image-picker';
+import { useTheme } from '../../context/ThemeContext';
 
 // Expense Category Selector
 const CategorySelector = ({ selected, onSelect, theme }: any) => {
@@ -64,8 +64,8 @@ const FormSection = ({ title, children, delay = 0, theme }: any) => (
 );
 
 export default function ExpenseRequestScreen() {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const { isDark } = useTheme();
+    const theme = Colors[isDark ? 'dark' : 'light'];
 
     const [category, setCategory] = useState('transport');
     const [amount, setAmount] = useState('');
@@ -133,7 +133,7 @@ export default function ExpenseRequestScreen() {
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
                 {/* Header Title */}
-                <Animated.View entering={FadeInDown.duration(300)} style={{ paddingHorizontal: 20, marginTop: 10, marginBottom: 10 }}>
+                <Animated.View entering={FadeInDown.duration(300)} style={{ paddingHorizontal: 20, marginTop: 10, marginBottom: 10, backgroundColor: theme.card, borderBottomWidth: 1, borderBottomColor: theme.border }}>
                     <Text style={[styles.headerTitle, { color: theme.text }]}>🧾 Apply Reimbursement</Text>
                 </Animated.View>
 
