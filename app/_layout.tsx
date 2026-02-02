@@ -9,16 +9,25 @@ export const unstable_settings = {
   anchor: '(tabs)',
 };
 
+import { ThemeProvider as AppThemeProvider } from '../context/ThemeContext';
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <AppThemeProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+          <Stack.Screen name="profile/personal-info" options={{ headerShown: false }} />
+          <Stack.Screen name="profile/documents" options={{ headerShown: false }} />
+          <Stack.Screen name="profile/bank-details" options={{ headerShown: false }} />
+          <Stack.Screen name="profile/emergency" options={{ headerShown: false }} />
+          <Stack.Screen name="directory" options={{ headerShown: false }} />
+        </Stack>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </AppThemeProvider>
   );
 }
