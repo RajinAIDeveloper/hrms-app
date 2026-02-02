@@ -11,11 +11,11 @@ import Animated, {
     withTiming,
     Easing,
 } from 'react-native-reanimated';
-import { useColorScheme } from '../../hooks/use-color-scheme';
 import { router } from 'expo-router';
 import AppHeader from '../../components/AppHeader';
 import { LineChart } from "react-native-chart-kit";
 import { Dimensions } from "react-native";
+import { useTheme } from '../../context/ThemeContext';
 
 // Animated Counter Component
 const AnimatedCounter = ({ target, prefix = '', suffix = '', theme }: any) => {
@@ -90,8 +90,8 @@ const DetailRow = ({ label, value, theme, isBold = false, isNegative = false }: 
 
 // --- Main Screen ---
 export default function PayrollScreen() {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const { isDark } = useTheme();
+    const theme = Colors[isDark ? 'dark' : 'light'];
 
     const [selectedPayslip, setSelectedPayslip] = useState<any>(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -141,7 +141,7 @@ export default function PayrollScreen() {
             <AppHeader />
 
             {/* Page Title */}
-            <Animated.View entering={FadeInDown.duration(300)} style={[styles.titleRow, { backgroundColor: theme.card }]}>
+            <Animated.View entering={FadeInDown.duration(300)} style={[styles.titleRow, { backgroundColor: theme.card, borderBottomWidth: 1, borderBottomColor: theme.border }]}>
                 <Text style={[styles.headerTitle, { color: theme.text }]}>💰 Payroll & Claims</Text>
             </Animated.View>
 
