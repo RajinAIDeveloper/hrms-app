@@ -95,10 +95,18 @@ export default function PayrollScreen() {
 
     const [selectedPayslip, setSelectedPayslip] = useState<any>(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [chartMode, setChartMode] = useState<'salary' | 'reimbursement'>('salary');
 
     const salary = 75000;
     const deductions = 5000;
     const netPay = salary - deductions;
+
+    // Reimbursement Mock Data
+    const reimbursementStats = {
+        claimed: 15400,
+        pending: 2400,
+        approved: 13000
+    };
 
     const payslips = [
         { month: 'Jan', year: '2026', amount: 70000, status: 'Paid', basic: 50000, hra: 15000, medical: 5000, transport: 5000, tax: 5000 },
@@ -106,6 +114,17 @@ export default function PayrollScreen() {
         { month: 'Nov', year: '2025', amount: 68000, status: 'Paid', basic: 48000, hra: 15000, medical: 5000, transport: 5000, tax: 5000 },
         { month: 'Oct', year: '2025', amount: 68000, status: 'Paid', basic: 48000, hra: 15000, medical: 5000, transport: 5000, tax: 5000 },
     ];
+
+    const chartData = {
+        salary: {
+            labels: ["Aug", "Sep", "Oct", "Nov", "Dec", "Jan"],
+            datasets: [{ data: [68000, 68000, 68000, 68000, 70000, 70000] }]
+        },
+        reimbursement: {
+            labels: ["Aug", "Sep", "Oct", "Nov", "Dec", "Jan"],
+            datasets: [{ data: [2000, 500, 3200, 1500, 4000, 2400] }]
+        }
+    };
 
     const handleDownload = (month: string, year: string) => {
         Alert.alert("📄 Downloading", `${month} ${year} payslip will be downloaded.`);
@@ -123,7 +142,7 @@ export default function PayrollScreen() {
 
             {/* Page Title */}
             <Animated.View entering={FadeInDown.duration(300)} style={[styles.titleRow, { backgroundColor: theme.card }]}>
-                <Text style={[styles.headerTitle, { color: theme.text }]}>💰 Payroll</Text>
+                <Text style={[styles.headerTitle, { color: theme.text }]}>💰 Payroll & Claims</Text>
             </Animated.View>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -148,79 +167,97 @@ export default function PayrollScreen() {
                     </Animated.View>
                 </View>
 
-                {/* Breakdown */}
-                <View style={[styles.breakdownCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                    <Text style={[styles.breakdownTitle, { color: theme.text }]}>Salary Breakdown</Text>
-
-                    <Animated.View entering={FadeInLeft.delay(300).duration(400)} style={styles.breakdownRow}>
-                        <Text style={[styles.breakdownLabel, { color: theme.subtext }]}>Basic Salary</Text>
-                        <Text style={[styles.breakdownValue, { color: theme.text }]}>৳50,000</Text>
-                    </Animated.View>
-
-                    <Animated.View entering={FadeInLeft.delay(350).duration(400)} style={styles.breakdownRow}>
-                        <Text style={[styles.breakdownLabel, { color: theme.subtext }]}>House Rent</Text>
-                        <Text style={[styles.breakdownValue, { color: theme.text }]}>৳15,000</Text>
-                    </Animated.View>
-
-                    <Animated.View entering={FadeInLeft.delay(400).duration(400)} style={styles.breakdownRow}>
-                        <Text style={[styles.breakdownLabel, { color: theme.subtext }]}>Medical</Text>
-                        <Text style={[styles.breakdownValue, { color: theme.text }]}>৳5,000</Text>
-                    </Animated.View>
-
-                    <Animated.View entering={FadeInLeft.delay(450).duration(400)} style={styles.breakdownRow}>
-                        <Text style={[styles.breakdownLabel, { color: theme.subtext }]}>Transport</Text>
-                        <Text style={[styles.breakdownValue, { color: theme.text }]}>৳5,000</Text>
-                    </Animated.View>
-
-                    <View style={[styles.breakdownDivider, { backgroundColor: theme.border }]} />
-
-                    <Animated.View entering={FadeInLeft.delay(500).duration(400)} style={styles.breakdownRow}>
-                        <Text style={[styles.breakdownLabel, { color: theme.error }]}>Tax Deduction</Text>
-                        <Text style={[styles.breakdownValue, { color: theme.error }]}>-৳5,000</Text>
-                    </Animated.View>
+                {/* Reimbursement Claims Summary */}
+                <View style={{ paddingHorizontal: 20, marginTop: 16 }}>
+                    <Text style={[styles.sectionTitle, { color: theme.text, marginBottom: 12 }]}>Reimbursement Claims</Text>
+                    <View style={{ flexDirection: 'row', gap: 12 }}>
+                        <View style={[styles.claimCard, { backgroundColor: theme.card, borderColor: theme.border, flex: 1 }]}>
+                            <Text style={[styles.claimLabel, { color: theme.subtext }]}>Claimed</Text>
+                            <Text style={[styles.claimValue, { color: theme.text }]}>৳{reimbursementStats.claimed.toLocaleString()}</Text>
+                        </View>
+                        <View style={[styles.claimCard, { backgroundColor: theme.card, borderColor: theme.border, flex: 1 }]}>
+                            <Text style={[styles.claimLabel, { color: theme.subtext }]}>Pending</Text>
+                            <Text style={[styles.claimValue, { color: theme.warning }]}>৳{reimbursementStats.pending.toLocaleString()}</Text>
+                        </View>
+                        <View style={[styles.claimCard, { backgroundColor: theme.card, borderColor: theme.border, flex: 1 }]}>
+                            <Text style={[styles.claimLabel, { color: theme.subtext }]}>Approved</Text>
+                            <Text style={[styles.claimValue, { color: theme.success }]}>৳{reimbursementStats.approved.toLocaleString()}</Text>
+                        </View>
+                    </View>
                 </View>
 
-                {/* Salary Analytics Graph */}
+                {/* Salary Breakdown */}
+                <View style={[styles.breakdownCard, { backgroundColor: theme.card, borderColor: theme.border, marginTop: 24 }]}>
+                    <Text style={[styles.breakdownTitle, { color: theme.text }]}>Salary Structure</Text>
+                    <DetailRow label="Basic Salary" value={50000} theme={theme} />
+                    <DetailRow label="House Rent" value={15000} theme={theme} />
+                    <DetailRow label="Medical" value={5000} theme={theme} />
+                    <DetailRow label="Transport" value={5000} theme={theme} />
+                    <View style={[styles.breakdownDivider, { backgroundColor: theme.border }]} />
+                    <DetailRow label="Tax Deduction" value={5000} theme={theme} isNegative />
+                </View>
+
+                {/* Analytics Section with Toggle */}
                 <Animated.View entering={FadeInDown.delay(250).duration(400)} style={styles.chartContainer}>
-                    <Text style={[styles.sectionTitle, { color: theme.text, marginLeft: 20, marginBottom: 10 }]}>Salary Trends (Last 6 Months)</Text>
+                    <View style={styles.chartHeader}>
+                        <Text style={[styles.sectionTitle, { color: theme.text }]}>Analytics & Trends</Text>
+                        <View style={[styles.chartToggle, { backgroundColor: theme.border }]}>
+                            <TouchableOpacity
+                                style={[styles.toggleBtn, chartMode === 'salary' && { backgroundColor: theme.card, shadowOpacity: 0.1 }]}
+                                onPress={() => setChartMode('salary')}
+                            >
+                                <Text style={[styles.toggleText, { color: chartMode === 'salary' ? theme.text : theme.subtext }]}>Salary</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.toggleBtn, chartMode === 'reimbursement' && { backgroundColor: theme.card, shadowOpacity: 0.1 }]}
+                                onPress={() => setChartMode('reimbursement')}
+                            >
+                                <Text style={[styles.toggleText, { color: chartMode === 'reimbursement' ? theme.text : theme.subtext }]}>Claims</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+
                     <LineChart
-                        data={{
-                            labels: ["Aug", "Sep", "Oct", "Nov", "Dec", "Jan"],
-                            datasets: [
-                                {
-                                    data: [68000, 68000, 68000, 68000, 70000, 70000]
-                                }
-                            ]
-                        }}
-                        width={Dimensions.get("window").width - 40} // from react-native
+                        data={chartData[chartMode]}
+                        width={Dimensions.get("window").width - 40}
                         height={220}
                         yAxisLabel="৳"
                         yAxisSuffix=""
-                        yAxisInterval={1} // optional, defaults to 1
+                        yAxisInterval={1}
                         chartConfig={{
                             backgroundColor: theme.background,
                             backgroundGradientFrom: theme.card,
                             backgroundGradientTo: theme.card,
-                            decimalPlaces: 0, // optional, defaults to 2dp
-                            color: (opacity = 1) => `rgba(16, 185, 129, ${opacity})`, // Primary color or Success color
+                            decimalPlaces: 0,
+                            color: (opacity = 1) => chartMode === 'salary' ? `rgba(16, 185, 129, ${opacity})` : `rgba(59, 130, 246, ${opacity})`,
                             labelColor: (opacity = 1) => theme.subtext,
-                            style: {
-                                borderRadius: 16
-                            },
-                            propsForDots: {
-                                r: "6",
-                                strokeWidth: "2",
-                                stroke: "#fff"
-                            }
+                            style: { borderRadius: 16 },
+                            propsForDots: { r: "6", strokeWidth: "2", stroke: theme.background }
                         }}
                         bezier
-                        style={{
-                            marginVertical: 8,
-                            borderRadius: 16,
-                            marginHorizontal: 20
-                        }}
+                        style={{ marginVertical: 8, borderRadius: 16, marginHorizontal: 20 }}
                     />
                 </Animated.View>
+
+                {/* Reports Section */}
+                <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
+                    <Text style={[styles.sectionTitle, { color: theme.text, marginBottom: 12 }]}>Reports & Documents</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 20 }}>
+                        {[
+                            { label: 'Tax Report', icon: 'document-text', color: '#8B5CF6' },
+                            { label: 'Yearly Summary', icon: 'stats-chart', color: '#F59E0B' },
+                            { label: 'Reimbursement History', icon: 'receipt', color: '#3B82F6' }
+                        ].map((report, index) => (
+                            <TouchableOpacity key={index} style={[styles.reportCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                                <View style={[styles.reportIcon, { backgroundColor: report.color + '20' }]}>
+                                    <Ionicons name={report.icon as any} size={24} color={report.color} />
+                                </View>
+                                <Text style={[styles.reportLabel, { color: theme.text }]}>{report.label}</Text>
+                                <Ionicons name="download-outline" size={16} color={theme.subtext} style={{ marginTop: 8 }} />
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                </View>
 
                 {/* Payslip History */}
                 <View style={styles.historySection}>
@@ -354,5 +391,21 @@ const styles = StyleSheet.create({
     modalDivider: { height: 1, marginVertical: 8 },
     modalDownloadBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16, borderRadius: 16 },
     modalDownloadText: { color: 'white', fontSize: 16, fontWeight: '700' },
+
+    // Reimbursement Claims
+    claimCard: { padding: 12, borderRadius: 12, borderWidth: 1, alignItems: 'center' },
+    claimLabel: { fontSize: 11, marginBottom: 4 },
+    claimValue: { fontSize: 15, fontWeight: '700' },
+
+    // Analytics Header & Toggle
+    chartHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 20, marginBottom: 10 },
+    chartToggle: { flexDirection: 'row', borderRadius: 8, padding: 2 },
+    toggleBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 },
+    toggleText: { fontSize: 12, fontWeight: '600' },
+
+    // Reports
+    reportCard: { width: 140, padding: 16, borderRadius: 16, borderWidth: 1, alignItems: 'flex-start' },
+    reportIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+    reportLabel: { fontSize: 13, fontWeight: '600', marginBottom: 4 },
 });
 

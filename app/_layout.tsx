@@ -25,6 +25,8 @@ export default function RootLayout() {
           <Stack.Screen name="profile/bank-details" options={{ headerShown: false }} />
           <Stack.Screen name="profile/emergency" options={{ headerShown: false }} />
           <Stack.Screen name="directory" options={{ headerShown: false }} />
+          <Stack.Screen name="shift-details" options={{ headerShown: false }} />
+          <Stack.Screen name="policies" options={{ headerShown: false }} />
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>
