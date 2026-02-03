@@ -5,9 +5,10 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import SideDrawer from '../components/SideDrawer';
+import { Colors } from '../constants/Colors';
 import { DrawerProvider } from '../context/DrawerContext';
 import { PrayerSettingsProvider } from '../context/PrayerSettingsContext';
-import { ThemeProvider as AppThemeProvider } from '../context/ThemeContext';
+import { ThemeProvider as AppThemeProvider, useTheme } from '../context/ThemeContext';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -36,10 +37,17 @@ export default function RootLayout() {
               <Stack.Screen name="islamic-library" options={{ headerShown: false }} />
             </Stack>
             <SideDrawer />
-            <StatusBar style="auto" />
+            <AppStatusBar />
           </ThemeProvider>
         </DrawerProvider>
       </PrayerSettingsProvider>
     </AppThemeProvider>
   );
+}
+
+function AppStatusBar() {
+  const { isDark } = useTheme();
+  const theme = Colors[isDark ? 'dark' : 'light'];
+
+  return <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={theme.background} translucent={false} />;
 }
