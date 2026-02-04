@@ -4,12 +4,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { router } from 'expo-router';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function LoginScreen() {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const { isDark } = useTheme();
+    const theme = Colors[isDark ? 'dark' : 'light'];
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');

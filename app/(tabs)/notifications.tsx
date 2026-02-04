@@ -4,8 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { router } from 'expo-router';
+import { useTheme } from '@/context/ThemeContext';
 
 const NOTIFICATIONS = [
     { id: '1', title: 'Leave Approved', message: 'Your leave request for Feb 10-12 has been approved by HR.', time: '2 hours ago', icon: 'checkmark-circle', color: '#10B981', read: false },
@@ -33,8 +33,8 @@ const NotificationItem = ({ item, theme, index }: any) => (
 );
 
 export default function NotificationsScreen() {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const { isDark } = useTheme();
+    const theme = Colors[isDark ? 'dark' : 'light'];
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>

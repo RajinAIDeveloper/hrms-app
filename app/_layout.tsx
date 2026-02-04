@@ -3,7 +3,6 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import SideDrawer from '../components/SideDrawer';
 import { Colors } from '../constants/Colors';
 import { DrawerProvider } from '../context/DrawerContext';
@@ -15,33 +14,42 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <AppThemeProvider>
       <PrayerSettingsProvider>
         <DrawerProvider>
-          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-              <Stack.Screen name="profile/personal-info" options={{ headerShown: false }} />
-              <Stack.Screen name="profile/documents" options={{ headerShown: false }} />
-              <Stack.Screen name="profile/bank-details" options={{ headerShown: false }} />
-              <Stack.Screen name="profile/emergency" options={{ headerShown: false }} />
-              <Stack.Screen name="directory" options={{ headerShown: false }} />
-              <Stack.Screen name="shift-details" options={{ headerShown: false }} />
-              <Stack.Screen name="policies" options={{ headerShown: false }} />
-              <Stack.Screen name="events" options={{ headerShown: false }} />
-              <Stack.Screen name="gallery" options={{ headerShown: false }} />
-              <Stack.Screen name="islamic-library" options={{ headerShown: false }} />
-            </Stack>
-            <SideDrawer />
-            <AppStatusBar />
-          </ThemeProvider>
+          <RootNavigation />
         </DrawerProvider>
       </PrayerSettingsProvider>
     </AppThemeProvider>
+  );
+}
+
+function RootNavigation() {
+  const { isDark } = useTheme();
+
+  return (
+    <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
+      <Stack>
+        <Stack.Screen name="splash" options={{ headerShown: false }} />
+        <Stack.Screen name="auth/login" options={{ headerShown: false }} />
+
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        <Stack.Screen name="profile/personal-info" options={{ headerShown: false }} />
+        <Stack.Screen name="profile/documents" options={{ headerShown: false }} />
+        <Stack.Screen name="profile/bank-details" options={{ headerShown: false }} />
+        <Stack.Screen name="profile/emergency" options={{ headerShown: false }} />
+        <Stack.Screen name="directory" options={{ headerShown: false }} />
+        <Stack.Screen name="shift-details" options={{ headerShown: false }} />
+        <Stack.Screen name="policies" options={{ headerShown: false }} />
+        <Stack.Screen name="events" options={{ headerShown: false }} />
+        <Stack.Screen name="gallery" options={{ headerShown: false }} />
+        <Stack.Screen name="islamic-library" options={{ headerShown: false }} />
+      </Stack>
+      <SideDrawer />
+      <AppStatusBar />
+    </ThemeProvider>
   );
 }
 
