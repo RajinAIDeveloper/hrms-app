@@ -32,6 +32,7 @@ function RootNavigation() {
     <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="splash" options={{ headerShown: false }} />
+        <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="auth/login" options={{ headerShown: false }} />
 
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

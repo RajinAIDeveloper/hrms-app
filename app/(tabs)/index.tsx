@@ -105,7 +105,9 @@ export default function Dashboard() {
     { id: 'lunch', label: 'Apply Lunch', icon: 'fast-food-outline', route: '/(tabs)/lunch-request', color: '#EF4444' },
     { id: 'leave', label: 'Apply Leave', icon: 'airplane-outline', route: '/(tabs)/leave-request', color: '#F59E0B' },
     { id: 'expense', label: 'Expense Reimbursement', icon: 'receipt-outline', route: '/(tabs)/expense-request', color: '#10B981' },
-    { id: 'documents', label: 'HR Documents', icon: 'document-text-outline', route: '/(tabs)/payslip-download', color: '#8B5CF6' },
+    { id: 'manual-attendance', label: 'Manual Attendance Request', icon: 'hand-left-outline', route: '/(tabs)/manual-attendance-request', color: '#8B5CF6' },
+    { id: 'early-departure', label: 'Early Departure Request', icon: 'walk-outline', route: '/(tabs)/early-departure-request', color: '#F97316' },
+    { id: 'documents', label: 'HR Documents', icon: 'document-text-outline', route: '/(tabs)/payslip-download', color: '#6366F1' },
   ];
 
   const handleActionPress = (action: any) => {

@@ -42,14 +42,17 @@ export default function SideDrawer() {
     const onNavigate = (item: typeof ITEMS[number]) => {
         closeDrawer();
 
-        // All drawer items are currently Coming Soon
-        setTimeout(() => {
-            Alert.alert(
-                "🚀 Coming Soon!",
-                `The ${item.label} module is currently under development. Stay tuned for updates!`,
-                [{ text: "Can't Wait!" }]
-            );
-        }, 300);
+        if (item.route === '/events' || item.route === '/gallery') {
+            setTimeout(() => {
+                Alert.alert(
+                    "🚀 Coming Soon!",
+                    `The ${item.label} module is currently under development. Stay tuned for updates!`,
+                    [{ text: "Can't Wait!" }]
+                );
+            }, 300);
+        } else {
+            router.push(item.route as any);
+        }
     };
 
     return (
