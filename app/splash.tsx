@@ -4,10 +4,12 @@ import { Colors } from '@/constants/Colors';
 import { router } from 'expo-router';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
 
 export default function SplashScreen() {
     const { isDark } = useTheme();
     const theme = Colors[isDark ? 'dark' : 'light'];
+    const { isAuthenticated, isLoading } = useAuth();
 
     const scale = useSharedValue(0.5);
     const opacity = useSharedValue(0);
@@ -22,11 +24,17 @@ export default function SplashScreen() {
         opacity.value = withTiming(1, { duration: 800 });
 
         const timer = setTimeout(() => {
-            router.replace('/auth/login');
+            if (!isLoading) {
+                if (isAuthenticated) {
+                    router.replace('/(tabs)');
+                } else {
+                    router.replace('/');
+                }
+            }
         }, 2000);
 
         return () => clearTimeout(timer);
-    }, []);
+    }, [isLoading, isAuthenticated]);
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>

@@ -6,20 +6,9 @@ import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../../context/ThemeContext';
 import { usePrayerSettings } from '../../context/PrayerSettingsContext';
+import { useAuth } from '../../context/AuthContext';
 import AppHeader from '../../components/AppHeader';
 import Animated, { FadeIn, FadeInDown, FadeInUp, FadeInLeft, FadeInRight, ZoomIn } from 'react-native-reanimated';
-
-// Mock User Data
-const USER = {
-    name: 'Rahim Ahmed',
-    email: 'rahim.ahmed@company.com',
-    employeeId: 'EMP-2024-0042',
-    department: 'Design',
-    designation: 'Senior UI/UX Designer',
-    joinDate: 'March 15, 2022',
-    manager: 'Sarah Khan',
-    location: 'Dhaka HQ',
-};
 
 const MENU_ITEMS = [
     { id: 'personal', icon: 'person-outline', label: 'Personal Information', screen: 'profile/personal-info' },
@@ -31,6 +20,7 @@ const MENU_ITEMS = [
 export default function ProfileScreen() {
     const router = useRouter();
     const { theme, isDark, setTheme } = useTheme();
+    const { user, logout } = useAuth();
     const {
         showUpcomingPrayerTimes,
         enablePrayerTimeNotifications,
@@ -39,10 +29,20 @@ export default function ProfileScreen() {
     } = usePrayerSettings();
 
     // State
-    const [avatar, setAvatar] = useState('https://cdn.usegalileo.ai/sdxl10/68175782-9905-4dcf-8848-f2b7a97fd22f.png');
     const [phone, setPhone] = useState('+880 1712 345678');
     const [notificationsEnabled, setNotificationsEnabled] = useState(true);
     const [biometricEnabled, setBiometricEnabled] = useState(false);
+
+    // Generate initials from employee name
+    const getInitials = (name: string) => {
+        if (!name) return 'U';
+        return name
+            .split(' ')
+            .map(n => n[0])
+            .join('')
+            .substring(0, 2)
+            .toUpperCase();
+    };
 
     // Edit Modal State
     const [isEditModalVisible, setEditModalVisible] = useState(false);
@@ -56,29 +56,20 @@ export default function ProfileScreen() {
     const cardBg = isDark ? '#1F2937' : 'white';
 
     const handleAvatarChange = async () => {
-        Alert.alert('Change Avatar', 'Choose an option', [
-            { text: 'Camera', onPress: () => console.log('Camera') },
-            {
-                text: 'Gallery', onPress: async () => {
-                    const result = await ImagePicker.launchImageLibraryAsync({
-                        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                        allowsEditing: true,
-                        aspect: [1, 1],
-                        quality: 1,
-                    });
-                    if (!result.canceled) {
-                        setAvatar(result.assets[0].uri);
-                    }
-                }
-            },
-            { text: 'Cancel', style: 'cancel' }
-        ]);
+        Alert.alert('Change Avatar', 'Photo upload feature coming soon!');
     };
 
     const handleLogout = () => {
         Alert.alert('Logout', 'Are you sure you want to logout?', [
             { text: 'Cancel', style: 'cancel' },
-            { text: 'Logout', style: 'destructive', onPress: () => router.replace('/auth/login' as any) },
+            {
+                text: 'Logout',
+                style: 'destructive',
+                onPress: async () => {
+                    await logout();
+                    // AuthContext handles navigation to login
+                }
+            },
         ]);
     };
 
@@ -103,21 +94,27 @@ export default function ProfileScreen() {
                 {/* Profile Card */}
                 <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.profileCard}>
                     <TouchableOpacity onPress={handleAvatarChange} style={styles.avatarContainer}>
-                        <Image source={{ uri: avatar }} style={styles.avatar} />
+                        {user?.photoPath ? (
+                            <Image source={{ uri: user.photoPath }} style={styles.avatar} />
+                        ) : (
+                            <View style={[styles.avatar, styles.avatarPlaceholder]}>
+                                <Text style={styles.avatarInitials}>{getInitials(user?.employeeName || 'User')}</Text>
+                            </View>
+                        )}
                         <View style={styles.cameraBadge}>
                             <Ionicons name="camera" size={12} color="white" />
                         </View>
                     </TouchableOpacity>
-                    <Text style={styles.name}>{USER.name}</Text>
-                    <Text style={styles.designation}>{USER.designation}</Text>
+                    <Text style={styles.name}>{user?.employeeName || 'User'}</Text>
+                    <Text style={styles.designation}>{user?.designationName || 'Employee'}</Text>
                     <View style={styles.badgeRow}>
                         <View style={styles.badge}>
                             <Ionicons name="briefcase-outline" size={14} color={iconColor} />
-                            <Text style={styles.badgeText}>{USER.department}</Text>
+                            <Text style={styles.badgeText}>{user?.departmentName || 'Department'}</Text>
                         </View>
                         <View style={styles.badge}>
                             <Ionicons name="id-card-outline" size={14} color={iconColor} />
-                            <Text style={styles.badgeText}>{USER.employeeId}</Text>
+                            <Text style={styles.badgeText}>{user?.employeeCode || 'ID'}</Text>
                         </View>
                     </View>
                 </Animated.View>
@@ -126,7 +123,7 @@ export default function ProfileScreen() {
                 <Animated.View entering={FadeInLeft.delay(200).duration(400)} style={styles.section}>
                     <View style={styles.infoItem}>
                         <Ionicons name="mail-outline" size={20} color={subTextColor} />
-                        <Text style={styles.infoText}>{USER.email}</Text>
+                        <Text style={styles.infoText}>{user?.username || 'user@example.com'}</Text>
                     </View>
                     <TouchableOpacity style={styles.infoItem} onPress={() => { setTempPhone(phone); setEditModalVisible(true); }}>
                         <Ionicons name="call-outline" size={20} color={subTextColor} />
@@ -135,7 +132,7 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
                     <View style={styles.infoItem}>
                         <Ionicons name="location-outline" size={20} color={subTextColor} />
-                        <Text style={styles.infoText}>{USER.location}</Text>
+                        <Text style={styles.infoText}>{user?.branchName || 'Office Location'}</Text>
                     </View>
                 </Animated.View>
 
@@ -248,6 +245,16 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
     profileCard: { alignItems: 'center', paddingVertical: 24, backgroundColor: isDark ? '#1F2937' : 'white', marginBottom: 8 },
     avatarContainer: { position: 'relative', marginBottom: 12 },
     avatar: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#F5F5F5' },
+    avatarPlaceholder: {
+        backgroundColor: isDark ? '#374151' : '#E5E7EB',
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    avatarInitials: {
+        fontSize: 36,
+        fontWeight: 'bold',
+        color: isDark ? '#60A5FA' : '#2563EB'
+    },
     cameraBadge: { position: 'absolute', bottom: 0, right: 0, backgroundColor: '#2563EB', padding: 6, borderRadius: 12, borderWidth: 2, borderColor: isDark ? '#1F2937' : 'white' },
     name: { fontSize: 20, fontWeight: 'bold', color: isDark ? '#F9FAFB' : '#171717' },
     designation: { fontSize: 14, color: isDark ? '#9CA3AF' : '#737373', marginTop: 4 },

@@ -7,15 +7,19 @@ import AppHeader from '../../components/AppHeader';
 import Animated, { FadeIn, FadeInDown, FadeInUp, FadeInLeft, FadeInRight, ZoomIn } from 'react-native-reanimated';
 
 // ============ MOCK DATA ============
-const MOCK_ATTENDANCE: Record<string, { status: 'present' | 'absent' | 'leave' | 'holiday'; punchIn?: string; punchOut?: string; hours?: string }> = {
-    '2026-02-03': { status: 'present', punchIn: '09:02 AM', punchOut: '06:15 PM', hours: '9h 13m' },
-    '2026-02-04': { status: 'present', punchIn: '09:10 AM', punchOut: '06:00 PM', hours: '8h 50m' },
+const MOCK_ATTENDANCE: Record<string, { status: 'present' | 'absent' | 'leave' | 'holiday'; punchIn?: string; punchOut?: string; hours?: string; isLate?: boolean; lateBy?: string }> = {
+    '2026-02-03': { status: 'present', punchIn: '09:02 AM', punchOut: '06:15 PM', hours: '9h 13m', isLate: true, lateBy: '2m' },
+    '2026-02-04': { status: 'present', punchIn: '09:10 AM', punchOut: '06:00 PM', hours: '8h 50m', isLate: true, lateBy: '10m' },
     '2026-02-05': { status: 'leave' },
-    '2026-02-06': { status: 'present', punchIn: '08:55 AM', punchOut: '06:30 PM', hours: '9h 35m' },
+    '2026-02-06': { status: 'present', punchIn: '08:55 AM', punchOut: '06:30 PM', hours: '9h 35m', isLate: false },
     '2026-02-07': { status: 'holiday' },
-    '2026-02-10': { status: 'present', punchIn: '09:00 AM', punchOut: '06:00 PM', hours: '9h 00m' },
+    '2026-02-10': { status: 'present', punchIn: '09:00 AM', punchOut: '06:00 PM', hours: '9h 00m', isLate: false },
     '2026-02-11': { status: 'absent' },
-    '2026-02-12': { status: 'present', punchIn: '09:05 AM', punchOut: '06:10 PM', hours: '9h 05m' },
+    '2026-02-12': { status: 'present', punchIn: '09:05 AM', punchOut: '06:10 PM', hours: '9h 05m', isLate: true, lateBy: '5m' },
+    '2026-02-13': { status: 'present', punchIn: '09:20 AM', punchOut: '06:05 PM', hours: '8h 45m', isLate: true, lateBy: '20m' },
+    '2026-02-14': { status: 'present', punchIn: '08:50 AM', punchOut: '06:00 PM', hours: '9h 10m', isLate: false },
+    '2026-02-17': { status: 'present', punchIn: '09:15 AM', punchOut: '06:20 PM', hours: '9h 05m', isLate: true, lateBy: '15m' },
+    '2026-02-18': { status: 'present', punchIn: '08:58 AM', punchOut: '06:00 PM', hours: '9h 02m', isLate: false },
 };
 
 const HOLIDAYS = [
@@ -40,7 +44,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 // ============ TYPES ============
-type TabType = 'attendance' | 'leaves' | 'holidays';
+type TabType = 'attendance' | 'leaves' | 'holidays' | 'late';
 type ViewMode = 'calendar' | 'list';
 
 export default function AttendanceScreen() {
@@ -51,20 +55,22 @@ export default function AttendanceScreen() {
     const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [reportModalVisible, setReportModalVisible] = useState(false);
+    const [detailsModalVisible, setDetailsModalVisible] = useState(false);
 
     // Dynamic Styles
     const styles = getStyles(isDark);
     const iconColor = isDark ? '#60A5FA' : '#2563EB';
 
     const stats = useMemo(() => {
-        let present = 0, absent = 0, leave = 0, holiday = 0;
+        let present = 0, absent = 0, leave = 0, holiday = 0, late = 0;
         Object.values(MOCK_ATTENDANCE).forEach(d => {
             if (d.status === 'present') present++;
             else if (d.status === 'absent') absent++;
             else if (d.status === 'leave') leave++;
             else if (d.status === 'holiday') holiday++;
+            if (d.isLate) late++;
         });
-        return { present, absent, leave, holiday };
+        return { present, absent, leave, holiday, late };
     }, []);
 
     const changeMonth = (delta: number) => {
@@ -104,6 +110,8 @@ export default function AttendanceScreen() {
                 if (data?.status === 'leave') bgColor = isDark ? 'rgba(245, 158, 11, 0.3)' : '#FEF9C3';
             } else if (activeTab === 'holidays') {
                 if (isHoliday || data?.status === 'holiday') bgColor = isDark ? 'rgba(59, 130, 246, 0.3)' : '#DBEAFE';
+            } else if (activeTab === 'late') {
+                if (data?.isLate) bgColor = isDark ? 'rgba(239, 68, 68, 0.25)' : '#FEE2E2';
             }
 
             days.push(
@@ -114,7 +122,10 @@ export default function AttendanceScreen() {
                 >
                     <TouchableOpacity
                         style={[styles.dayCell, { backgroundColor: bgColor }, isSelected && styles.selectedDay]}
-                        onPress={() => setSelectedDate(dateKey)}
+                        onPress={() => {
+                            setSelectedDate(dateKey);
+                            setDetailsModalVisible(true);
+                        }}
                         activeOpacity={0.7}
                     >
                         <Text style={[styles.dayText, isSelected && styles.selectedDayText]}>{day}</Text>
@@ -128,6 +139,9 @@ export default function AttendanceScreen() {
                         )}
                         {activeTab === 'holidays' && (isHoliday || data?.status === 'holiday') && (
                             <View style={[styles.dotIndicator, { backgroundColor: '#3B82F6' }]} />
+                        )}
+                        {activeTab === 'late' && data?.isLate && (
+                            <View style={[styles.dotIndicator, { backgroundColor: '#EF4444' }]} />
                         )}
                     </TouchableOpacity>
                 </Animated.View>
@@ -146,17 +160,16 @@ export default function AttendanceScreen() {
         if (activeTab === 'attendance') shouldShow = true;
         else if (activeTab === 'leaves' && data?.status === 'leave') shouldShow = true;
         else if (activeTab === 'holidays' && (holiday || data?.status === 'holiday')) shouldShow = true;
+        else if (activeTab === 'late' && data?.isLate) shouldShow = true;
 
         if (!shouldShow) {
-            if (activeTab === 'leaves' && data?.status) return null; // Don't show non-leaves in leaves tab
-            if (activeTab === 'holidays' && !holiday) return null; // Don't show non-holidays
+            if (activeTab === 'leaves' && data?.status) return null;
+            if (activeTab === 'holidays' && !holiday) return null;
+            if (activeTab === 'late' && !data?.isLate) return null;
         }
-        // If we are in specific tabs and picked an empty day, keep it hidden or show generic?
-        // Let's show generic "No data" if nothing exists, but if we are in 'Leaves' tab and pick a 'Present' day, maybe emphasize it's not a leave?
-        // For simplicity, reusing same card logic but filtering above handles "relevance".
 
         return (
-            <Animated.View entering={FadeInUp.duration(400)} style={styles.detailCard}>
+            <View style={styles.detailCard}>
                 <View style={styles.detailHeader}>
                     <Text style={styles.detailTitle}>{new Date(selectedDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</Text>
                     {holiday && <View style={styles.holidayBadge}><Text style={styles.holidayBadgeText}>🎉 {holiday.name}</Text></View>}
@@ -169,12 +182,18 @@ export default function AttendanceScreen() {
                                 <Ionicons name={data.status === 'present' ? 'checkmark-circle' : data.status === 'absent' ? 'close-circle' : 'time'} size={24} color="white" />
                                 <Text style={styles.largeStatusText}>{data.status.toUpperCase()}</Text>
                             </View>
+                            {data.isLate && (
+                                <View style={[styles.largeStatusBadge, { backgroundColor: '#EF4444', marginLeft: 8 }]}>
+                                    <Ionicons name="time-outline" size={24} color="white" />
+                                    <Text style={styles.largeStatusText}>LATE {data.lateBy}</Text>
+                                </View>
+                            )}
                         </View>
 
                         <View style={styles.timeGrid}>
                             {data.punchIn && (
                                 <View style={styles.timeItem}>
-                                    <Text style={styles.timeLabel}>V Punch In</Text>
+                                    <Text style={styles.timeLabel}>Punch In</Text>
                                     <Text style={styles.timeValue}>{data.punchIn}</Text>
                                 </View>
                             )}
@@ -194,10 +213,10 @@ export default function AttendanceScreen() {
                     </View>
                 ) : (
                     <Text style={styles.noDataText}>
-                        {activeTab === 'holidays' && holiday ? 'Public Holiday' : activeTab === 'leaves' ? 'No leave recorded.' : 'No attendance data found for this date.'}
+                        {activeTab === 'holidays' && holiday ? 'Public Holiday' : activeTab === 'leaves' ? 'No leave recorded.' : activeTab === 'late' ? 'No late record.' : 'No attendance data found for this date.'}
                     </Text>
                 )}
-            </Animated.View>
+            </View>
         );
     };
 
@@ -213,7 +232,7 @@ export default function AttendanceScreen() {
             </View>
 
             <View style={styles.tabContainer}>
-                {(['attendance', 'leaves', 'holidays'] as TabType[]).map((tab, index) => (
+                {(['attendance', 'leaves', 'holidays', 'late'] as TabType[]).map((tab, index) => (
                     <TouchableOpacity key={tab} style={[styles.tab, activeTab === tab && styles.activeTab]} onPress={() => { setActiveTab(tab); setSelectedDate(null); }}>
                         <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>{tab.charAt(0).toUpperCase() + tab.slice(1)}</Text>
                     </TouchableOpacity>
@@ -247,6 +266,19 @@ export default function AttendanceScreen() {
                     </Animated.View>
                 )}
 
+                {activeTab === 'late' && (
+                    <Animated.View entering={FadeInDown.duration(500)} style={styles.lateStatsContainer}>
+                        <View style={styles.lateStatsCard}>
+                            <View style={styles.lateStatsHeader}>
+                                <Ionicons name="time-outline" size={32} color="#EF4444" />
+                                <Text style={styles.lateStatsTitle}>Late Arrivals</Text>
+                            </View>
+                            <Text style={styles.lateStatsCount}>{stats.late}</Text>
+                            <Text style={styles.lateStatsSubtext}>Total late days this month</Text>
+                        </View>
+                    </Animated.View>
+                )}
+
                 {/* Leave Balances Header (only for Leaves tab) */}
                 {activeTab === 'leaves' && (
                     <View style={{ paddingHorizontal: 20, marginBottom: 16 }}>
@@ -256,6 +288,11 @@ export default function AttendanceScreen() {
                 {activeTab === 'holidays' && (
                     <View style={{ paddingHorizontal: 20, marginBottom: 16 }}>
                         <Text style={styles.sectionTitle}>Holiday Calendar</Text>
+                    </View>
+                )}
+                {activeTab === 'late' && (
+                    <View style={{ paddingHorizontal: 20, marginBottom: 16 }}>
+                        <Text style={styles.sectionTitle}>Late Arrival Calendar</Text>
                     </View>
                 )}
 
@@ -285,16 +322,28 @@ export default function AttendanceScreen() {
                             .filter(([_, data]) => {
                                 if (activeTab === 'attendance') return true;
                                 if (activeTab === 'leaves') return data.status === 'leave';
+                                if (activeTab === 'late') return data.isLate === true;
                                 return false; // Holidays handled separately below for better view
                             })
                             .map(([date, data], index) => (
                                 <Animated.View key={date} entering={FadeInRight.delay(index * 50).duration(400)}>
-                                    <TouchableOpacity style={styles.listItem} onPress={() => setSelectedDate(date)}>
+                                    <TouchableOpacity
+                                        style={styles.listItem}
+                                        onPress={() => {
+                                            setSelectedDate(date);
+                                            setDetailsModalVisible(true);
+                                        }}
+                                    >
                                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                                             <View style={[styles.listIcon, { backgroundColor: data.status === 'present' ? '#22C55E20' : '#EF444420' }]}>
                                                 <Ionicons name={data.status === 'present' ? 'checkmark' : 'alert'} size={18} color={data.status === 'present' ? '#22C55E' : '#EF4444'} />
                                             </View>
-                                            <Text style={styles.listDate}>{date}</Text>
+                                            <View>
+                                                <Text style={styles.listDate}>{date}</Text>
+                                                {activeTab === 'late' && data.lateBy && (
+                                                    <Text style={styles.lateByText}>Late by {data.lateBy}</Text>
+                                                )}
+                                            </View>
                                         </View>
                                         <View style={[styles.statusBadge, { backgroundColor: data.status === 'present' ? '#22C55E' : data.status === 'absent' ? '#EF4444' : '#F59E0B' }]}>
                                             <Text style={styles.statusText}>{data.status.toUpperCase()}</Text>
@@ -316,8 +365,6 @@ export default function AttendanceScreen() {
                         ))}
                     </View>
                 )}
-
-                {renderDayDetails()}
 
                 {/* Additional Tab Content */}
                 {activeTab === 'leaves' && (
@@ -356,6 +403,18 @@ export default function AttendanceScreen() {
                         ))}
                         <TouchableOpacity style={styles.modalClose} onPress={() => setReportModalVisible(false)}>
                             <Text style={styles.modalCloseText}>Cancel</Text>
+                        </TouchableOpacity>
+                    </Animated.View>
+                </Pressable>
+            </Modal>
+
+            {/* Day Details Modal */}
+            <Modal visible={detailsModalVisible} transparent animationType="fade" onRequestClose={() => setDetailsModalVisible(false)}>
+                <Pressable style={styles.modalOverlay} onPress={() => setDetailsModalVisible(false)}>
+                    <Animated.View entering={ZoomIn.duration(300)} style={styles.detailsModalContent}>
+                        {renderDayDetails()}
+                        <TouchableOpacity style={styles.modalClose} onPress={() => setDetailsModalVisible(false)}>
+                            <Text style={styles.modalCloseText}>Close</Text>
                         </TouchableOpacity>
                     </Animated.View>
                 </Pressable>
@@ -447,4 +506,14 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
     modalOptionText: { fontSize: 16, color: isDark ? '#F9FAFB' : '#1F2937', fontWeight: '500' },
     modalClose: { marginTop: 20, alignItems: 'center', padding: 12 },
     modalCloseText: { color: '#EF4444', fontWeight: '700', fontSize: 16 },
+
+    lateStatsContainer: { paddingHorizontal: 20, marginBottom: 20 },
+    lateStatsCard: { backgroundColor: isDark ? '#1F2937' : 'white', borderRadius: 24, padding: 24, alignItems: 'center', borderWidth: 1, borderColor: isDark ? '#374151' : '#F3F4F6' },
+    lateStatsHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
+    lateStatsTitle: { fontSize: 20, fontWeight: '700', color: isDark ? '#F9FAFB' : '#111827' },
+    lateStatsCount: { fontSize: 48, fontWeight: '800', color: '#EF4444', marginBottom: 8 },
+    lateStatsSubtext: { fontSize: 14, color: isDark ? '#9CA3AF' : '#6B7280' },
+
+    detailsModalContent: { backgroundColor: isDark ? '#1F2937' : 'white', borderRadius: 24, padding: 0, width: '100%', maxWidth: 400, overflow: 'hidden' },
+    lateByText: { fontSize: 12, color: '#EF4444', fontWeight: '600', marginTop: 2 },
 });

@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../constants/Colors';
 import { useDrawer } from '../context/DrawerContext';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
 const { width } = Dimensions.get('window');
 const DRAWER_WIDTH = Math.min(320, Math.round(width * 0.82));
@@ -22,6 +23,7 @@ export default function SideDrawer() {
     const router = useRouter();
     const { isOpen, closeDrawer } = useDrawer();
     const { isDark } = useTheme();
+    const { user } = useAuth();
     const theme = Colors[isDark ? 'dark' : 'light'];
     const insets = useSafeAreaInsets();
 
@@ -72,11 +74,13 @@ export default function SideDrawer() {
                 <View style={[styles.drawerHeader, { borderBottomColor: theme.border }]}>
                     <View style={styles.headerProfile}>
                         <View style={[styles.profileAvatar, { backgroundColor: theme.primary }]}>
-                            <Text style={styles.profileInitials}>RA</Text>
+                            <Text style={styles.profileInitials}>
+                                {user?.employeeName ? user.employeeName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'U'}
+                            </Text>
                         </View>
                         <View>
-                            <Text style={[styles.profileName, { color: theme.text }]}>Rahim Ahmed</Text>
-                            <Text style={[styles.profileSubtitle, { color: theme.subtext }]}>Senior Designer</Text>
+                            <Text style={[styles.profileName, { color: theme.text }]}>{user?.employeeName || 'User'}</Text>
+                            <Text style={[styles.profileSubtitle, { color: theme.subtext }]}>{user?.designationName || 'Employee'}</Text>
                         </View>
                     </View>
                     <Pressable onPress={closeDrawer} hitSlop={10} style={[styles.closeBtn, { backgroundColor: theme.background }]}>

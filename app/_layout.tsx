@@ -5,6 +5,7 @@ import 'react-native-reanimated';
 
 import SideDrawer from '../components/SideDrawer';
 import { Colors } from '../constants/Colors';
+import { AuthProvider } from '../context/AuthContext';
 import { DrawerProvider } from '../context/DrawerContext';
 import { PrayerSettingsProvider } from '../context/PrayerSettingsContext';
 import { ThemeProvider as AppThemeProvider, useTheme } from '../context/ThemeContext';
@@ -15,13 +16,15 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   return (
-    <AppThemeProvider>
-      <PrayerSettingsProvider>
-        <DrawerProvider>
-          <RootNavigation />
-        </DrawerProvider>
-      </PrayerSettingsProvider>
-    </AppThemeProvider>
+    <AuthProvider>
+      <AppThemeProvider>
+        <PrayerSettingsProvider>
+          <DrawerProvider>
+            <RootNavigation />
+          </DrawerProvider>
+        </PrayerSettingsProvider>
+      </AppThemeProvider>
+    </AuthProvider>
   );
 }
 

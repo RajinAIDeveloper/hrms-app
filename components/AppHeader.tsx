@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../context/ThemeContext';
 import { useDrawer } from '../context/DrawerContext';
+import { useAuth } from '../context/AuthContext';
 
 interface AppHeaderProps {
     showMenu?: boolean;
@@ -25,15 +26,23 @@ export default function AppHeader({
     const router = useRouter();
     const { isDark } = useTheme();
     const { openDrawer } = useDrawer();
+    const { logout } = useAuth();
 
     const bgColor = isDark ? '#1F2937' : 'white';
     const iconColor = isDark ? '#60A5FA' : '#2563EB';
     const borderColor = isDark ? '#374151' : '#F5F5F5';
 
     const handleLogout = () => {
-        Alert.alert('Logout', 'Are you sure you want to logout?', [
+        Alert.alert('Logout Confirmation', 'Are you sure you want to logout?', [
             { text: 'Cancel', style: 'cancel' },
-            { text: 'Logout', style: 'destructive', onPress: () => router.replace('/auth/login' as any) },
+            {
+                text: 'Logout',
+                style: 'destructive',
+                onPress: async () => {
+                    await logout();
+                    // AuthContext handles navigation to login
+                }
+            },
         ]);
     };
 

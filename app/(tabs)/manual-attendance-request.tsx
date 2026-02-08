@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, TextInput, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, TextInput, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,6 +15,9 @@ import { router } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AppHeader from '../../components/AppHeader';
 import { useTheme } from '../../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
+import attendanceApi from '../../services/attendance';
+import { EmployeeManualAttendanceDTO } from '../../types/attendance.types';
 
 // Request Type Selector
 const RequestTypeSelector = ({ selected, onSelect, theme }: any) => {
@@ -75,8 +78,9 @@ const FormSection = ({ title, children, delay = 0, theme }: any) => (
 export default function ManualAttendanceRequestScreen() {
     const { isDark } = useTheme();
     const theme = Colors[isDark ? 'dark' : 'light'];
+    const { user } = useAuth();
 
-    const [requestType, setRequestType] = useState('in_time'); // 'in_time', 'out_time', 'both'
+    const [requestType, setRequestType] = useState('both'); // 'in_time', 'out_time', 'both'
     const [attendanceDate, setAttendanceDate] = useState(new Date());
 
     // Default times
@@ -106,6 +110,26 @@ export default function ManualAttendanceRequestScreen() {
         return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     };
 
+    // Format time to HH:mm:ss for API
+    const formatTimeForAPI = (date: Date): string => {
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        const seconds = '00';
+        return `${hours}:${minutes}:${seconds}`;
+    };
+
+    // Format date to ISO string for API
+    const formatDateForAPI = (date: Date): string => {
+        return date.toISOString();
+    };
+
+    // Map request type to API format
+    const mapRequestType = (type: string): 'In-Time' | 'Out-Time' | 'Both' => {
+        if (type === 'in_time') return 'In-Time';
+        if (type === 'out_time') return 'Out-Time';
+        return 'Both';
+    };
+
     const handleDateChange = (event: any, date?: Date) => {
         setShowDatePicker(Platform.OS === 'ios');
         if (date) setAttendanceDate(date);
@@ -121,22 +145,137 @@ export default function ManualAttendanceRequestScreen() {
         if (date) setOutTime(date);
     };
 
-    const handleSubmit = () => {
+    // Validation function
+    const validateForm = (): string | null => {
+        // Validate reason
         if (!reason.trim()) {
-            Alert.alert("Missing Information", "Please provide a reason for the Manual Attendance Request.");
+            return 'Please provide a reason for the manual attendance request.';
+        }
+
+        // Validate time fields based on request type
+        const apiRequestType = mapRequestType(requestType);
+
+        if (apiRequestType === 'In-Time' || apiRequestType === 'Both') {
+            // Check if in-time is after 1:00 AM
+            const minInTime = new Date(inTime);
+            minInTime.setHours(1, 0, 0, 0);
+
+            if (inTime < minInTime) {
+                return 'In-time cannot be before 01:00 AM';
+            }
+        }
+
+        if (apiRequestType === 'Out-Time' || apiRequestType === 'Both') {
+            // Check if out-time is before 11:59 PM
+            const maxOutTime = new Date(outTime);
+            maxOutTime.setHours(23, 59, 0, 0);
+
+            if (outTime > maxOutTime) {
+                return 'Out-time cannot be after 11:59 PM';
+            }
+        }
+
+        // If both selected, validate that out-time is after in-time
+        if (apiRequestType === 'Both') {
+            if (inTime >= outTime) {
+                return 'Out-time must be after In-time';
+            }
+        }
+
+        return null;
+    };
+
+    const handleSubmit = async () => {
+        // Validate form
+        const validationError = validateForm();
+        if (validationError) {
+            Alert.alert('Validation Error', validationError);
+            return;
+        }
+
+        if (!user?.employeeId) {
+            Alert.alert('Error', 'User information not available. Please login again.');
             return;
         }
 
         scale.value = withSequence(withTiming(0.95, { duration: 100 }), withSpring(1));
         setLoading(true);
-        setTimeout(() => {
+
+        try {
+            const apiRequestType = mapRequestType(requestType);
+
+            // Build request payload
+            const requestData: EmployeeManualAttendanceDTO = {
+                ManualAttendanceId: 0,
+                ManualAttendanceCode: '',
+                EmployeeId: user.employeeId,
+                DepartmentId: user.departmentId || null,
+                SectionId: user.sectionId || null,
+                UnitId: null,
+                AttendanceDate: formatDateForAPI(attendanceDate),
+                TimeRequestFor: apiRequestType,
+                InTime: (apiRequestType === 'In-Time' || apiRequestType === 'Both')
+                    ? formatTimeForAPI(inTime)
+                    : null,
+                OutTime: (apiRequestType === 'Out-Time' || apiRequestType === 'Both')
+                    ? formatTimeForAPI(outTime)
+                    : null,
+                StateStatus: 'Pending',
+                Reason: reason.trim(),
+                Remarks: null,
+            };
+
+            console.log('Submitting manual attendance:', requestData);
+
+            // Call API
+            const response = await attendanceApi.saveManualAttendance(requestData);
+
+            console.log('API Response:', response.data);
+
+            // Check if submission was successful
+            if (response.data.status) {
+                setLoading(false);
+                Alert.alert(
+                    'Success',
+                    `Your manual attendance request for ${formatDate(attendanceDate)} has been submitted successfully!`,
+                    [
+                        {
+                            text: 'OK',
+                            onPress: () => {
+                                // Reset form
+                                setRequestType('both');
+                                setAttendanceDate(new Date());
+                                setInTime(defaultInTime);
+                                setOutTime(defaultOutTime);
+                                setReason('');
+
+                                // Navigate back
+                                router.back();
+                            }
+                        }
+                    ]
+                );
+            } else {
+                throw new Error(response.data.message || 'Failed to submit manual attendance request');
+            }
+        } catch (error: any) {
             setLoading(false);
-            Alert.alert(
-                "✅ Request Submitted!",
-                `Your manual attendance request for ${formatDate(attendanceDate)} has been submitted for approval.`,
-                [{ text: "OK", onPress: () => router.back() }]
-            );
-        }, 1500);
+            console.error('Manual attendance submission error:', error);
+
+            let errorMessage = 'Failed to submit manual attendance request. Please try again.';
+
+            if (error.response) {
+                // Server responded with error
+                errorMessage = error.response.data?.message || error.response.data?.error || errorMessage;
+            } else if (error.request) {
+                // Network error
+                errorMessage = 'Network error. Please check your connection.';
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+
+            Alert.alert('Error', errorMessage);
+        }
     };
 
     return (
@@ -241,12 +380,13 @@ export default function ManualAttendanceRequestScreen() {
                 {/* Submit */}
                 <Animated.View entering={FadeInDown.delay(500).duration(400)} style={[styles.submitContainer, animatedStyle]}>
                     <TouchableOpacity
-                        style={[styles.submitButton, { backgroundColor: theme.primary }]}
+                        style={[styles.submitButton, { backgroundColor: theme.primary, opacity: loading ? 0.7 : 1 }]}
                         onPress={handleSubmit}
                         activeOpacity={0.9}
+                        disabled={loading}
                     >
                         {loading ? (
-                            <Ionicons name="reload" size={24} color="white" />
+                            <ActivityIndicator size="small" color="white" />
                         ) : (
                             <>
                                 <Ionicons name="checkmark-circle-outline" size={24} color="white" />

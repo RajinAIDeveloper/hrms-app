@@ -14,6 +14,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useTheme } from '../../context/ThemeContext';
 import { usePrayerSettings } from '../../context/PrayerSettingsContext';
+import { useAuth } from '../../context/AuthContext';
 import AppHeader from '../../components/AppHeader';
 
 const { width } = Dimensions.get('window');
@@ -51,6 +52,7 @@ export default function Dashboard() {
   const router = useRouter();
   const { isDark } = useTheme();
   const { showUpcomingPrayerTimes } = usePrayerSettings();
+  const { user } = useAuth();
   const dynamicStyles = getStyles(isDark);
 
   // Biometric/Timer State
@@ -85,6 +87,17 @@ export default function Dashboard() {
     const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  // Generate initials from employee name
+  const getInitials = (name: string) => {
+    if (!name) return 'U';
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .substring(0, 2)
+      .toUpperCase();
   };
 
   const handleBiometricPress = () => {
@@ -127,13 +140,19 @@ export default function Dashboard() {
         <View style={dynamicStyles.greetingContainer}>
           <View>
             <Text style={dynamicStyles.greetingText}>Good Morning,</Text>
-            <Text style={dynamicStyles.userName}>Rahim Ahmed</Text>
+            <Text style={dynamicStyles.userName}>{user?.employeeName || 'User'}</Text>
           </View>
           <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
-            <Image
-              source={{ uri: 'https://cdn.usegalileo.ai/sdxl10/68175782-9905-4dcf-8848-f2b7a97fd22f.png' }}
-              style={dynamicStyles.avatar}
-            />
+            {user?.photoPath ? (
+              <Image
+                source={{ uri: user.photoPath }}
+                style={dynamicStyles.avatar}
+              />
+            ) : (
+              <View style={[dynamicStyles.avatar, dynamicStyles.avatarPlaceholder]}>
+                <Text style={dynamicStyles.avatarInitials}>{getInitials(user?.employeeName || 'User')}</Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -338,6 +357,16 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
     borderRadius: 24,
     borderWidth: 2,
     borderColor: isDark ? '#374151' : '#E5E7EB',
+    backgroundColor: isDark ? '#374151' : '#E5E7EB',
+  },
+  avatarPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarInitials: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: isDark ? '#60A5FA' : '#2563EB',
   },
   // Biometric Card
   biometricCard: {
