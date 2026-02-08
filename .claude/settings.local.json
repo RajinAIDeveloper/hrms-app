@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(dir:*)",
+      "Bash(pdftotext:*)",
+      "WebFetch(domain:islamic.dbhfinance.com)",
+      "WebSearch",
+      "WebFetch(domain:www.bb.org.bd)"
+    ]
+  }
+}
